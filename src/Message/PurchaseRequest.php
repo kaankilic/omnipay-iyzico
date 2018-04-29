@@ -16,7 +16,7 @@ class PurchaseRequest extends AbstractRequest{
      * @var array
      */
     protected $endpoints = array(
-        'production' => '"https://api.iyzipay.com"',
+        'production' => 'https://api.iyzipay.com',
         'test' => '"https://sandbox-api.iyzipay.com',
     );
 	/**
