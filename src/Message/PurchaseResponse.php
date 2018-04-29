@@ -13,4 +13,7 @@ use Symfony\Component\HttpFoundation\Response;
  */
 class PurchaseResponse extends AbstractRequest
 {
+	public function isResponse(){
+		return true;
+	}
 }
