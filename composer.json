@@ -1,5 +1,5 @@
 {
-    "name": "omnipay/payu",
+    "name": "omnipay/iyzico",
     "type": "library",
     "description": "Iyzico driver for the Omnipay payment processing library",
     "keywords": [
