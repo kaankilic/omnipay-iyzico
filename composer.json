@@ -1,5 +1,5 @@
 {
-    "name": "omnipay/iyzico",
+    "name": "kaankilic/iyzico",
     "type": "library",
     "description": "Iyzico driver for the Omnipay payment processing library",
     "keywords": [
