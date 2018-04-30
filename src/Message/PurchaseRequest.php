@@ -1,6 +1,6 @@
 <?php
 
-namespace Omnipay\PayU\Message;
+namespace Omnipay\Iyzico\Message;
 
 use Omnipay\Common\CreditCard;
 use Omnipay\Common\Item;
@@ -8,7 +8,7 @@ use Omnipay\Common\Message\AbstractRequest;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * PayU Purchase Request
+ * Iyzico Purchase Request
  */
 class PurchaseRequest extends AbstractRequest{
 
@@ -17,7 +17,7 @@ class PurchaseRequest extends AbstractRequest{
      */
     protected $endpoints = array(
         'production' => 'https://api.iyzipay.com',
-        'test' => '"https://sandbox-api.iyzipay.com',
+        'test' => 'https://sandbox-api.iyzipay.com',
     );
 	/**
 	 * @return mixed
@@ -57,6 +57,19 @@ class PurchaseRequest extends AbstractRequest{
     {
         return $this->getTestMode() ? $this->endpoints['test'] : $this->endpoints[$endpoint];
     }
+	/**
+	 * @return mixed
+	 */
+	public function getID(){
+		return $this->getParameter('id');
+	}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setID($value){
+		return $this->setParameter('id',$value);
+	}
 	/**
 	 * @return mixed
 	 */
@@ -106,61 +119,78 @@ class PurchaseRequest extends AbstractRequest{
 	public function setOrderDate($value){
 		return $this->setParameter('orderDate',$value);
 	}
+	public function getOptions(){
+        $options = new \Iyzipay\Options();
+        $options->setApiKey($this->getApiKey());
+		$options->setSecretKey($this->getSecretKey());
+		$options->setBaseUrl($this->getEndpoint('test'));
+		return $options;
+	}
 	/**
 	* @return array
 	* @throws \Omnipay\Common\Exception\InvalidCreditCardException
 	*/
 	public function getData(){
-        $options = new \Iyzipay\Options();
-        $options->setApiKey($this->getApiKey());
-		$options->setSecretKey($this->getSecretKey());
-		$options->setBaseUrl($this->getEndpoint('test'));
+		$options = $this->getOptions();
 		// If card is not valid then throw InvalidCreditCardException.
         $creditCard = new \Iyzipay\Model\PaymentCard();
+        $card = $this->getCard();
         $card->validate();
-        $creditCard->setCardHolderName($this->getName());
-		$creditCard->setCardNumber($this->getNumber());
-		$creditCard->setExpireMonth($this->getExpiryMonth());
-		$creditCard->setExpireYear($this->getExpiryYear());
-		$creditCard->setCvc($this->getCvv());
-		$creditCard->setRegisterCard(false); // todo
+        $creditCard->setCardHolderName($card->getName());
+		$creditCard->setCardNumber($card->getNumber());
+		$creditCard->setExpireMonth($card->getExpiryMonth());
+		$creditCard->setExpireYear($card->getExpiryYear());
+		$creditCard->setCvc($card->getCvv());
+//		$creditCard->setRegisterCard(false); // todo
         $billingAddress = new \Iyzipay\Model\Address();
-        $billingAddress->setContactName($this->getBillingName());
-        $billingAddress->setCity($this->getBillingCity());
-        $billingAddress->setCountry($this->getBillingCountry());
-        $billingAddress->setAddress($this->getBillingAddress());
-        $billingAddress->setZipCode($this->getBillingZip());
+        $billingAddress->setContactName($card->getName());
+        $billingAddress->setCity($card->getBillingCity());
+        $billingAddress->setCountry($card->getBillingCountry());
+        $billingAddress->setAddress($card->getBillingAddress1());
+        $billingAddress->setZipCode($card->getBillingPostcode());
         $buyer = new \Iyzipay\Model\Buyer();
-        $buyer->setId($this->getId());
-        $buyer->setName($this->getFirstname());
-        $buyer->setSurname($this->getLastname());
-        $buyer->setEmail($this->getEmail());
+        $buyer->setId($card->getFirstname());
+        $buyer->setRegistrationDate(date('Y-m-d H:i:s'));
+        $buyer->setRegistrationAddress($card->getBillingAddress1());
+        $buyer->setZipCode($card->getBillingPostcode());
+        $buyer->setIp("10.0.0.2");
+        $buyer->setName($card->getFirstname());
+        $buyer->setSurname($card->getLastname());
+        $buyer->setEmail($card->getEmail());
         $buyer->setIdentityNumber($this->getIdentityNumber());
-        $buyer->setRegistrationDate($this->getRegistrationDate());
-        $buyer->setRegistrationAddress($this->getAddress());
-        $buyer->setCity($this->getCity());
-        $buyer->setCountry($this->getCountry());
-        $buyer->setIp($this->getClientIp());
+        $buyer->setCity($card->getCity());
+        $buyer->setCountry($card->getCountry());
         $basket = new \Iyzipay\Model\BasketItem();
         $items = $this->getItems();
         $basketItems = array();
-        foreach ($items as $item) {
-	        $basket->setId($item->getName());
-	        $basket->setName($item->getName());
-	        $basket->setCategory1($item->getName());
-	        $basket->setCategory2($item->getName());
-	        $basket->setItemType($item->getName());
-	        $basket->setPrice($item->getPrice());
-	        basketItems[] = $basket;
-        }
+        if( !empty($items)){
+	        foreach ($items as $key => $item) {
+		        $basket->setId($key);
+		        $basket->setName($item->getName());
+		        $basket->setCategory1($item->getName());
+		        $basket->setItemType("VIRTUAL");
+		        $basket->setPrice($item->getPrice());
+		        $basketItems[] = $basket;
+	        }
+	    }
         // todo
 		$data = new \Iyzipay\Request\CreatePaymentRequest();
+		$data->setPrice(40);
+		$data->setPaidPrice(40);
+        $data->setLocale(\Iyzipay\Model\Locale::TR);
+        $data->setCurrency(\Iyzipay\Model\Currency::TL);
+        $data->setConversationId("asdasd");
+        $data->setPaymentChannel(\Iyzipay\Model\PaymentChannel::WEB);
+        $data->setPaymentGroup(\Iyzipay\Model\PaymentGroup::SUBSCRIPTION);
 		$data->setPaymentCard($creditCard);
-        $data->setShippingAddress($billingAddress);
+		$data->setInstallment($this->getInstallment());
+        $data->setBasketId(1);
+		$data->setBuyer($buyer);
         $data->setBillingAddress($billingAddress);
         $data->setBasketItems($basketItems);
+        $data->setCallbackUrl("https://pos.app");
 		$payment = \Iyzipay\Model\ThreedsInitialize::create($data, $options);
-		dd($payment);
+		return $payment;
 	}
 	/**
      * @param $data

@@ -1,7 +1,7 @@
 
 <?php
 
-namespace Omnipay\PayU\Message;
+namespace Omnipay\Iyzico\Message;
 
 use Omnipay\Common\CreditCard;
 use Omnipay\Common\Item;
@@ -9,7 +9,7 @@ use Omnipay\Common\Message\AbstractRequest;
 use Symfony\Component\HttpFoundation\Response;
 
 /**
- * PayU Purchase Request
+ * Iyzico Purchase Request
  */
 class PurchaseResponse extends AbstractRequest
 {
