@@ -3,10 +3,18 @@
 **Iyzico driver for the Omnipay payment processing library**
 
 <p align="center">
-	<a href="https://travis-ci.org/kaankilic/omnipay-iyzico"><img src="https://travis-ci.org/kaankilic/omnipay-iyzico.svg" alt="Build Status"></a>	
-	<a href="https://packagist.org/packages/kaankilic/omnipay-iyzico"><img src="https://poser.pugx.org/kaankilic/omnipay-iyzico/d/total.svg" alt="Total Downloads"></a>		
-	<a href="https://packagist.org/packages/kaankilic/omnipay-iyzico"><img src="https://poser.pugx.org/kaankilic/omnipay-iyzico/v/stable.svg" alt="Latest Stable Version"></a>		 
-	<a href="https://packagist.org/packages/kaankilic/omnipay-iyzico"><img src="https://poser.pugx.org/kaankilic/omnipay-iyzico/license.svg" alt="License"></a>
+	<a href="https://travis-ci.org/kaankilic/omnipay-iyzico">
+		<img src="https://travis-ci.org/kaankilic/omnipay-iyzico.svg" alt="Build Status">
+	</a>	
+	<a href="https://packagist.org/packages/kaankilic/omnipay-iyzico">
+		<img src="https://poser.pugx.org/kaankilic/omnipay-iyzico/d/total.svg" alt="Total Downloads">
+	</a>		
+	<a href="https://packagist.org/packages/kaankilic/omnipay-iyzico">
+		<img src="https://poser.pugx.org/kaankilic/omnipay-iyzico/v/stable.svg" alt="Latest Stable Version">
+	</a>		 
+	<a href="https://packagist.org/packages/kaankilic/omnipay-iyzico">
+		<img src="https://poser.pugx.org/kaankilic/omnipay-iyzico/license.svg" alt="License">
+	</a>
 </p>
 
 ## Introduction
@@ -34,17 +42,17 @@ For general usage instructions, please see the main [Omnipay](https://github.com
 	    'expiryMonth' => '08',
 	    'expiryYear' => '2023',
 	    'cvv' => '001',
-	    'billingCity'	=> 'Izmir',
+	    'billingCity'	=> 'Amsterdam',
 	    'billingAddress1'	=> 'test address',
-		'billingCountry' => 'Turkiye',
+		'billingCountry' => 'Nederlands',
 		'email'	=> 'bl4cksta@gmail.com',
-		'postCode'	=> '35530'
+		'postCode'	=> 'NL11100'
 	);
 	$card = new CreditCard($formInputData);
-	$request = $gateway->authorize(['identityNumber'=>'35476978256','callbackUrl' => 'https://pos.app/']);
+	$request = $gateway->authorize(['identityNumber'=>'IDENTITY_NUMBER','callbackUrl' => 'https://pos.app/']);
 	$request->setCard($card);
-	$request->setApiKey('sandbox-DvaeegvTrPBMmxIstCWQzIbcDxQExKwQ');
-	$request->setSecretKey('sandbox-p9CUz4nCowOVtl4EXdpUUt5XqJqWtqhr');
+	$request->setApiKey('sandbox-API-KEY');
+	$request->setSecretKey('sandbox-SECRET-KEY');
 	$basket = new \Omnipay\Common\ItemBag();
 	$item = new \Omnipay\Common\Item(['name' => 'item name 1', 'price'=> '40.00']);
 	$basket->add($item);
