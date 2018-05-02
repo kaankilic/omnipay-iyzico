@@ -46,14 +46,6 @@ class Gateway extends AbstractGateway
 
     /**
      * @param array $parameters
-     * @return \Omnipay\Common\Message\AbstractRequest
-     */
-    public function capture(array $parameters = array()){
-        return $this->createRequest('\Omnipay\Iyzico\Message\CaptureRequest', $parameters);
-    }
-
-    /**
-     * @param array $parameters
      * @return PurchaseResponse
      */
     public function purchase(array $parameters = array())

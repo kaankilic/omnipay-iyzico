@@ -1,5 +1,4 @@
 <?php
-
 namespace Omnipay\Iyzico\Message;
 
 use Omnipay\Common\CreditCard;
@@ -11,13 +10,12 @@ use Symfony\Component\HttpFoundation\Response;
  * Iyzico Purchase Request
  */
 class PurchaseRequest extends AbstractRequest{
-
     /**
      * @var array
      */
     protected $endpoints = array(
-        'production' => 'https://api.iyzipay.com',
-        'test' => 'https://sandbox-api.iyzipay.com',
+    	'production' => 'https://api.iyzipay.com',
+    	'test' => 'https://sandbox-api.iyzipay.com',
     );
 	/**
 	 * @return mixed
@@ -55,7 +53,7 @@ class PurchaseRequest extends AbstractRequest{
      */
     public function getEndpoint($endpoint)
     {
-        return $this->getTestMode() ? $this->endpoints['test'] : $this->endpoints[$endpoint];
+    	return $this->getTestMode() ? $this->endpoints['test'] : $this->endpoints[$endpoint];
     }
 	/**
 	 * @return mixed
@@ -104,28 +102,58 @@ class PurchaseRequest extends AbstractRequest{
 	public function setInstallment($value){
 		return $this->setParameter('installment',$value);
 	}
+	/**
+	 * The date when the order is initiated in the system, in YYYY-MM-DD HH:MM:SS format (e.g.: "2012-05-01 21:15:45")
+	 * Important: Date should be UTC standard +/-10 minutes
+	 * @return mixed
+	 */
+	public function getCallbackUrl(){
+		return $this->getParameter('callbackUrl');
+	}
+	/**
+	 * @param $value
+	 * @return AbstractRequest
+	 */
+	public function setCallbackUrl($value){
+		return $this->setParameter('callbackUrl',$value);
+	}
 		/**
 	 * The date when the order is initiated in the system, in YYYY-MM-DD HH:MM:SS format (e.g.: "2012-05-01 21:15:45")
 	 * Important: Date should be UTC standard +/-10 minutes
 	 * @return mixed
 	 */
-		public function getOrderDate(){
-			return $this->getParameter('orderDate');
+		public function getClientIp(){
+			return $this->getParameter('clientIP');
 		}
 	/**
 	 * @param $value
 	 * @return AbstractRequest
 	 */
-	public function setOrderDate($value){
-		return $this->setParameter('orderDate',$value);
+	public function setClientIp($value){
+		return $this->setParameter('clientIP',$value);
 	}
 	public function getOptions(){
-        $options = new \Iyzipay\Options();
-        $options->setApiKey($this->getApiKey());
+		$options = new \Iyzipay\Options();
+		$options->setApiKey($this->getApiKey());
 		$options->setSecretKey($this->getSecretKey());
 		$options->setBaseUrl($this->getEndpoint('test'));
 		return $options;
 	}
+	public function buildTransactionID($card){
+		$data = array(
+			"name"	=> $card->getName(),
+			"city"	=> $card->getBillingCity(),
+			"country" => $card->getBillingCountry(),
+			"address" => $card->getBillingAddress1(),
+			"zipcode" => $card->getBillingPostcode(),
+			"ip"	=> $this->getClientIp(),
+			"id"	=> uniqid(),
+			"timestamp"	=> date("YmdHis")
+		);
+		$data = serialize($data);
+		return hash_hmac("sha1",$data,$this->getSecretKey());
+	}
+
 	/**
 	* @return array
 	* @throws \Omnipay\Common\Exception\InvalidCreditCardException
@@ -133,62 +161,63 @@ class PurchaseRequest extends AbstractRequest{
 	public function getData(){
 		$options = $this->getOptions();
 		// If card is not valid then throw InvalidCreditCardException.
-        $creditCard = new \Iyzipay\Model\PaymentCard();
-        $card = $this->getCard();
-        $card->validate();
-        $creditCard->setCardHolderName($card->getName());
+		$creditCard = new \Iyzipay\Model\PaymentCard();
+		$card = $this->getCard();
+		$card->validate();
+		$creditCard->setCardHolderName($card->getName());
 		$creditCard->setCardNumber($card->getNumber());
 		$creditCard->setExpireMonth($card->getExpiryMonth());
 		$creditCard->setExpireYear($card->getExpiryYear());
 		$creditCard->setCvc($card->getCvv());
 //		$creditCard->setRegisterCard(false); // todo
-        $billingAddress = new \Iyzipay\Model\Address();
-        $billingAddress->setContactName($card->getName());
-        $billingAddress->setCity($card->getBillingCity());
-        $billingAddress->setCountry($card->getBillingCountry());
-        $billingAddress->setAddress($card->getBillingAddress1());
-        $billingAddress->setZipCode($card->getBillingPostcode());
-        $buyer = new \Iyzipay\Model\Buyer();
-        $buyer->setId($card->getFirstname());
-        $buyer->setRegistrationDate(date('Y-m-d H:i:s'));
-        $buyer->setRegistrationAddress($card->getBillingAddress1());
-        $buyer->setZipCode($card->getBillingPostcode());
-        $buyer->setIp("10.0.0.2");
-        $buyer->setName($card->getFirstname());
-        $buyer->setSurname($card->getLastname());
-        $buyer->setEmail($card->getEmail());
-        $buyer->setIdentityNumber($this->getIdentityNumber());
-        $buyer->setCity($card->getCity());
-        $buyer->setCountry($card->getCountry());
-        $basket = new \Iyzipay\Model\BasketItem();
-        $items = $this->getItems();
-        $basketItems = array();
-        if( !empty($items)){
-	        foreach ($items as $key => $item) {
-		        $basket->setId($key);
-		        $basket->setName($item->getName());
-		        $basket->setCategory1($item->getName());
-		        $basket->setItemType("VIRTUAL");
-		        $basket->setPrice($item->getPrice());
-		        $basketItems[] = $basket;
-	        }
-	    }
+		$billingAddress = new \Iyzipay\Model\Address();
+		$billingAddress->setContactName($card->getName());
+		$billingAddress->setCity($card->getBillingCity());
+		$billingAddress->setCountry($card->getBillingCountry());
+		$billingAddress->setAddress($card->getBillingAddress1());
+		$billingAddress->setZipCode($card->getBillingPostcode());
+		$buyer = new \Iyzipay\Model\Buyer();
+		$buyer->setId($card->getFirstname());
+		$buyer->setRegistrationDate(date('Y-m-d H:i:s'));
+		$buyer->setRegistrationAddress($card->getBillingAddress1());
+		$buyer->setZipCode($card->getBillingPostcode());
+		$buyer->setIp($this->getClientIp());
+		$buyer->setName($card->getFirstname());
+		$buyer->setSurname($card->getLastname());
+		$buyer->setEmail($card->getEmail());
+		$buyer->setIdentityNumber($this->getIdentityNumber());
+		$buyer->setCity($card->getCity());
+		$buyer->setCountry($card->getCountry());
+		$basket = new \Iyzipay\Model\BasketItem();
+		$items = $this->getItems();
+		$basketItems = array();
+		$amount = 0;
+		if( !empty($items)){
+			foreach ($items as $key => $item) {
+				$basket->setId($key);
+				$basket->setName($item->getName());
+				$basket->setCategory1($item->getName());
+				$basket->setItemType("VIRTUAL");
+				$basket->setPrice($item->getPrice());
+				$basketItems[] = $basket;
+				$amount += $item->getPrice();
+			}
+		}
         // todo
 		$data = new \Iyzipay\Request\CreatePaymentRequest();
-		$data->setPrice(40);
-		$data->setPaidPrice(40);
-        $data->setLocale(\Iyzipay\Model\Locale::TR);
-        $data->setCurrency(\Iyzipay\Model\Currency::TL);
-        $data->setConversationId("asdasd");
-        $data->setPaymentChannel(\Iyzipay\Model\PaymentChannel::WEB);
-        $data->setPaymentGroup(\Iyzipay\Model\PaymentGroup::SUBSCRIPTION);
+		$data->setPaidPrice($amount);
+		$data->setPrice($amount);
+		$data->setLocale(\Iyzipay\Model\Locale::TR);
+		$data->setCurrency(\Iyzipay\Model\Currency::TL);
+		$data->setConversationId($this->buildTransactionID($card));
+		$data->setPaymentChannel(\Iyzipay\Model\PaymentChannel::WEB);
+		$data->setPaymentGroup(\Iyzipay\Model\PaymentGroup::SUBSCRIPTION);
 		$data->setPaymentCard($creditCard);
 		$data->setInstallment($this->getInstallment());
-        $data->setBasketId(1);
 		$data->setBuyer($buyer);
-        $data->setBillingAddress($billingAddress);
-        $data->setBasketItems($basketItems);
-        $data->setCallbackUrl("https://pos.app");
+		$data->setBillingAddress($billingAddress);
+		$data->setBasketItems($basketItems);
+		$data->setCallbackUrl($this->getcallbackUrl());
 		$payment = \Iyzipay\Model\ThreedsInitialize::create($data, $options);
 		return $payment;
 	}
@@ -196,44 +225,17 @@ class PurchaseRequest extends AbstractRequest{
      * @param $data
      * @return Response
      */
-    protected function createResponse($data)
-    {
-        return $this->response = new Response($this, $data);
-    }
+	protected function createResponse($data)
+	{
+		return $this->response = new Response($this, $data);
+	}
+
     /**
      * @param $data
      * @return PurchaseResponse
      */
     public function sendData($data)
     {
-        $httpRequest = $this->httpClient->post($this->getEndpoint('test'), null, http_build_query($data));
-        //$httpRequest->getCurlOptions()->set(CURLOPT_SSLVERSION, 6); // CURL_SSLVERSION_TLSv1_2 for libcurl < 7.35
-        $response = $httpRequest->send();
-        $xmlData = json_decode(json_encode($response->xml()),1);
-        $data = array();
-        foreach($xmlData as $key => $value){
-            $data[$key] = empty($value) ? null: $value;
-        }
-        return new PurchaseResponse($this,$data);
-    }
-    /**
-     * HMAC_MD5 signature applied on all parameters from the request.
-     * Source string for HMAC_MD5 will be calculated by adding the length
-     * of each field value at the beginning of field value. A common key
-     * shared between PayU and the merchant is used for the signature.
-     * @param array $data
-     * @return string
-     */
-    public function generateHash(array $data)
-    {
-        if ($this->getSecretKey()) {
-            //begin HASH calculation
-            ksort($data);
-            $hashString = "";
-            foreach ($data as $key => $val) {
-                $hashString .= strlen($val) . $val;
-            }
-            return hash_hmac("md5", $hashString, $this->getSecretKey());
-        }
+    	return new PurchaseResponse($this,$data);
     }
 }
