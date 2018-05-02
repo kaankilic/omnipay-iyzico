@@ -22,7 +22,7 @@
 
 ## License
 
-Laravel WTFilter is open-sourced software licensed under the [MIT](http://opensource.org/licenses/MIT)
+Laravel `omnipay-iyzico` is open-sourced software licensed under the [MIT](http://opensource.org/licenses/MIT)
 
 ### Installation
 To get started with `omnipay-iyzico`, use Composer to add the package to your project's dependencies:
